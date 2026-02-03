@@ -1,0 +1,20 @@
+{
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "[vue]": {
+        "editor.defaultFormatter": "Vue.volar",
+        "editor.formatOnSave": true
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features",
+        "editor.formatOnSave": true
+    },
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2
+    },
+    "editor.tabSize": 2
+}
