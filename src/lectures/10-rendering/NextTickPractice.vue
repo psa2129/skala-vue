@@ -11,13 +11,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 const isVisible = ref(false)
 const inputRef = ref(null)
 
-function showInputBox() {
+async function showInputBox() {
   isVisible.value = true
+
+  await nextTick()
   inputRef.value.focus()
+
 }
 </script>

@@ -22,7 +22,7 @@
           </select>
         </div>
         <div class="file-info-header" v-if="selectedKey">
-          <code>📍 {{ displayPath }}</code>
+          <code class="path-highlight">📍 {{ displayPath }}</code>
         </div>
       </div>
     </header>
@@ -66,31 +66,25 @@ import 'highlight.js/styles/github.css';
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('xml', xml);
 
-// --- 드래그 로직 관련 상태 ---
 const containerRef = ref(null);
 const isDragging = ref(false);
-const splitPercentage = ref(50); // 기본 50:50 비율
+const splitPercentage = ref(50);
 
 const startDragging = (e) => {
   isDragging.value = true;
   document.body.style.cursor = 'col-resize';
-  document.body.style.userSelect = 'none'; // 드래그 중 텍스트 선택 방지
-
+  document.body.style.userSelect = 'none';
   window.addEventListener('mousemove', onDragging);
   window.addEventListener('mouseup', stopDragging);
 };
 
 const onDragging = (e) => {
   if (!isDragging.value || !containerRef.value) return;
-
   const containerRect = containerRef.value.getBoundingClientRect();
   const relativeX = e.clientX - containerRect.left;
   let newPercentage = (relativeX / containerRect.width) * 100;
-
-  // 최소 10%, 최대 90%로 범위 제한
   if (newPercentage < 10) newPercentage = 10;
   if (newPercentage > 90) newPercentage = 90;
-
   splitPercentage.value = newPercentage;
 };
 
@@ -98,16 +92,12 @@ const stopDragging = () => {
   isDragging.value = false;
   document.body.style.cursor = '';
   document.body.style.userSelect = '';
-
   window.removeEventListener('mousemove', onDragging);
   window.removeEventListener('mouseup', stopDragging);
 };
 
-onUnmounted(() => {
-  stopDragging();
-});
+onUnmounted(() => stopDragging());
 
-// --- 기존 컴포넌트 로드 로직 ---
 const componentsModules = import.meta.glob('./lectures/**/*.vue');
 const rawModules = import.meta.glob('./lectures/**/*.vue', { query: '?raw', import: 'default' });
 
@@ -121,9 +111,7 @@ for (const path in componentsModules) {
   const folderName = parts.length > 1 ? parts[0] : '/';
   const fileName = parts.length > 1 ? parts.slice(1).join(' > ') : parts[0];
 
-  if (!componentsByFolder[folderName]) {
-    componentsByFolder[folderName] = [];
-  }
+  if (!componentsByFolder[folderName]) componentsByFolder[folderName] = [];
   componentsByFolder[folderName].push(fileName);
 
   const fullKey = folderName === '/' ? fileName : `${folderName} > ${fileName}`;
@@ -166,7 +154,6 @@ const loadSourceCode = async () => {
     currentComponent.value = null;
     return;
   }
-
   try {
     const loader = allRawSources[selectedKey.value];
     if (loader) {
@@ -176,8 +163,7 @@ const loadSourceCode = async () => {
       componentKey.value++;
     }
   } catch (error) {
-    console.error('로드 실패:', error);
-    editableCode.value = '// 코드를 불러오지 못했습니다.';
+    editableCode.value = '// 로드 실패';
   }
 };
 
@@ -208,20 +194,47 @@ watch(selectedKey, loadSourceCode, { immediate: true });
   align-items: center;
   gap: 20px;
   background: #f8f9fa;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* 그리드 레이아웃 설정 */
+/* --- 수정된 형광 바탕 강조 스타일 --- */
+.file-info-header {
+  margin-left: auto;
+}
+
+.path-highlight {
+  /* Vue의 메인 그린 색상을 투명하게 활용한 민트 배경 */
+  background-color: #eef7f3;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  /* 가독성을 위해 짙은 Slate 색상 적용 */
+  color: #35495e;
+  /* 강조를 위한 포인트 테두리 */
+  border: 1px solid #42b883;
+  font-weight: 600;
+  /* 입체감을 주는 아주 연한 그림자 */
+  box-shadow: 2px 2px 5px rgba(66, 184, 131, 0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.select-group label {
+  font-weight: 600;
+  margin-right: 5px;
+}
+
 .panels {
   display: grid;
   width: 100%;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 210px);
   min-height: 600px;
-  gap: 0;
 }
 
-/* 리사이저 스타일 */
 .resizer {
   width: 8px;
   cursor: col-resize;
@@ -244,7 +257,6 @@ watch(selectedKey, loadSourceCode, { immediate: true });
   display: flex;
   flex-direction: column;
   min-width: 0;
-  /* 중요: 그리드 아이템 찌그러짐 방지 */
 }
 
 .panel-header {
@@ -257,8 +269,6 @@ watch(selectedKey, loadSourceCode, { immediate: true });
   flex: 1;
   overflow: auto;
   background: #f6f8fa;
-  font-size: 13px;
-  text-align: left;
 }
 
 .code-editor code {
@@ -273,15 +283,14 @@ watch(selectedKey, loadSourceCode, { immediate: true });
   padding: 20px;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 80px;
-  color: #999;
+select {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  outline: none;
 }
 
-select {
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
+select:focus {
+  border-color: #42b883;
 }
 </style>

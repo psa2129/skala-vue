@@ -28,7 +28,8 @@
 import { ref } from "vue";
 import ChildComponent from "./ChildComponent.vue";
 
-// 흥부네 10남매 데이터 (상아님을 위한 맞춤 이름)
+// --- [데이터 정의] ---
+// 흥부네 10남매의 이름과 물려받은 자산을 담은 반응형 배열
 const children = ref([
   { name: "흥일 (장남)", assets: ["낡은 갓", "바느질 세트"] },
   { name: "흥이 (차남)", assets: ["물지게", "짚신 두 켤레"] },
@@ -42,62 +43,35 @@ const children = ref([
   { name: "막순이 (막내)", assets: ["형님들의 사랑", "사탕"] }
 ]);
 
-const totalMoney = ref(0);
-const history = ref([]);
+const totalMoney = ref(0); // 총 누적 금액
+const history = ref([]);   // 효도 내역 로그 메시지를 담는 배열
 
+/**
+ * 자식 컴포넌트에서 emit("send-money", 이름, 금액)을 쏘면 실행되는 핸들러
+ */
 const handleMoney = (name, amount) => {
+  // 1. 총액 합산
   totalMoney.value += amount;
+
+  // 2. 로그 메시지 생성 (현재 시간 + 이름 + 금액)
   const log = `[${new Date().toLocaleTimeString()}] ${name}님이 ${amount.toLocaleString()}원을 효도했습니다!`;
+
+  // 3. 내역 배열에 추가
   history.value.push(log);
 
+  // 4. [데이터 최적화]: 내역이 5건을 넘어가면 가장 오래된 것(첫 번째 요소)을 삭제
   if (history.value.length > 5) history.value.shift();
 };
 </script>
 
 <style>
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #fafafa;
-}
-
-.main-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.total-board {
-  background: #fbc02d;
-  color: white;
-  padding: 20px;
-  border-radius: 15px;
-  display: inline-block;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
+/* ... (생략된 스타일 부분) ... */
 .children-grid {
   display: grid;
+  /* repeat(auto-fill): 화면 너비에 맞춰 가능한 만큼 칸을 채움 (반응형 그리드) */
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
 }
 
-.history {
-  margin-top: 30px;
-  padding: 15px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.history ul {
-  list-style: none;
-  padding: 0;
-}
-
-.history li {
-  padding: 5px 0;
-  border-bottom: 1px solid #eee;
-  font-size: 0.9rem;
-}
+/* ... (생략된 스타일 부분) ... */
 </style>

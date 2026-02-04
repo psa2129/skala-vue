@@ -49,27 +49,26 @@
 <script setup>
 import { ref } from 'vue';
 
-const INITIAL_FOODS = [
-  "쌀", "보리", "콩", "감자", "양파",
-  "마늘", "배추", "무", "고구마", "호박", "두쫀쿠"
-];
-
+// --- [초기 상수 정의] ---
+const INITIAL_FOODS = ["쌀", "보리", "콩", "감자", "양파", "마늘", "배추", "무", "고구마", "호박", "두쫀쿠"];
 const INITIAL_PEOPLE = [
   { name: "철수", received: [] },
   { name: "영희", received: [] },
   { name: "민수", received: [] }
 ];
 
-const foods = ref([...INITIAL_FOODS]);
-const people = ref(INITIAL_PEOPLE.map(p => ({ ...p, received: [] })));
+// --- [반응형 상태 관리] ---
+const foods = ref([...INITIAL_FOODS]); // 현재 창고에 남은 식량 목록
+const people = ref(INITIAL_PEOPLE.map(p => ({ ...p, received: [] }))); // 사람들 데이터
 
-// [상태 관리]
-const selectedFoods = ref([]);
-const selectedPeopleIndices = ref([]); // 다중 선택을 위해 배열로 변경
+const selectedFoods = ref([]);         // 체크된 식량들 (창고에서 나갈 후보)
+const selectedPeopleIndices = ref([]); // 체크된 사람들 (식량을 받을 후보)
 
-// [기능 1] 랜덤 배분 로직
+/**
+ * [기능 1] 랜덤 배분 로직
+ */
 const transferFoodRandomly = () => {
-  // 예외 처리
+  // 방어 코드: 선택된 항목이 없으면 중단
   if (selectedPeopleIndices.value.length === 0) {
     alert("식량을 받을 사람을 최소 한 명 이상 선택해주세요.");
     return;
@@ -79,50 +78,45 @@ const transferFoodRandomly = () => {
     return;
   }
 
-  // 1. 선택된 식량들을 하나씩 순회하며 랜덤 배분
+  // 1. 선택된 식량들을 하나씩 랜덤하게 배정
   selectedFoods.value.forEach(foodItem => {
-    // 선택된 사람들 인덱스 목록에서 랜덤하게 하나 뽑기
+    // '선택된 사람들' 중에서 무작위 인덱스 하나 추출
     const randomIndex = Math.floor(Math.random() * selectedPeopleIndices.value.length);
     const targetPersonIndex = selectedPeopleIndices.value[randomIndex];
 
-    // 당첨된 사람에게 식량 추가
+    // 당첨된 사람의 received 배열에 해당 식량 추가
     people.value[targetPersonIndex].received.push(foodItem);
   });
 
-  // 2. 창고에서 배분된 식량 제거
+  // 2. 창고 업데이트: 배분된 식량은 원본 창고(foods)에서 제거 (불변성 유지하며 필터링)
   foods.value = foods.value.filter(food => !selectedFoods.value.includes(food));
 
-  // 3. 식량 선택 상태 초기화 (사람 선택은 유지)
+  // 3. 작업 완료 후 식량 선택 목록만 초기화
   selectedFoods.value = [];
 };
 
-// [기능 2] 초기화 로직
+/**
+ * [기능 2] 초기화 로직
+ */
 const resetData = () => {
   if (!confirm("모든 분배 내역을 초기화하시겠습니까?")) return;
 
+  // 원본 상수를 복사하여 초기 상태로 복구
   foods.value = [...INITIAL_FOODS];
   people.value.forEach(person => { person.received = []; });
 
+  // 선택 상태 모두 비우기
   selectedFoods.value = [];
-  selectedPeopleIndices.value = []; // 사람 선택 목록도 초기화
+  selectedPeopleIndices.value = [];
 };
 </script>
 
 <style scoped>
-.container {
-  display: flex;
-  gap: 20px;
-  max-width: 800px;
-  margin: 0 auto;
-  font-family: 'Malgun Gothic', sans-serif;
-}
-
+/* flex: 1 및 height: 500px 설정을 통해 
+   창고와 사람 목록의 높이를 맞추고 내부 스크롤을 구현 
+*/
 .column {
   flex: 1;
-  border: 1px solid #ccc;
-  padding: 20px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
   display: flex;
   flex-direction: column;
   height: 500px;
@@ -131,108 +125,21 @@ const resetData = () => {
 .list-container {
   flex: 1;
   overflow-y: auto;
-  border: 1px solid #eee;
-  background: #fff;
-  border-radius: 4px;
-  padding: 10px;
 }
 
-h2 {
-  text-align: center;
-  margin-top: 0;
-  border-bottom: 2px solid #ddd;
-  padding-bottom: 10px;
-}
+/* 내용이 많아지면 내부에서만 스크롤 발생 */
 
-.item {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-}
-
-.item label,
-.person-header label {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.button-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.btn {
-  padding: 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  transition: background 0.2s;
-}
-
-.transfer-btn {
-  background-color: #2196F3;
-  /* 랜덤 배분 느낌의 파란색 */
-  color: white;
-}
-
-.transfer-btn:hover {
-  background-color: #1976D2;
-}
-
-.reset-btn {
-  background-color: #f44336;
-  color: white;
-}
-
-.reset-btn:hover {
-  background-color: #d32f2f;
-}
-
-.person-card {
-  background: white;
-  border: 1px solid #ddd;
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 4px;
-}
-
-.person-header {
-  margin-bottom: 8px;
-  font-size: 18px;
-}
-
-.received-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  min-height: 30px;
-  background-color: #f0f0f0;
-  padding: 5px;
-  border-radius: 4px;
-}
-
+/* 시각적 요소를 위한 스타일 (태그, 카드, 버튼 등) */
 .tag {
   background-color: #ffcc80;
-  padding: 2px 8px;
   border-radius: 12px;
-  font-size: 14px;
-  color: #333;
 }
 
-.placeholder {
-  color: #999;
-  font-size: 12px;
-  align-self: center;
+/* 받은 식량 배지 스타일 */
+.transfer-btn {
+  background-color: #2196F3;
+  color: white;
 }
 
-.empty-msg {
-  text-align: center;
-  color: #888;
-  margin-top: 20px;
-}
+/* 활기찬 느낌의 파란색 배분 버튼 */
 </style>

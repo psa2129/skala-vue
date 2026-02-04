@@ -2,6 +2,7 @@
   <div class="container">
     <h2>깊은 자식 컴포넌트</h2>
     <div><b>메시지(inject):</b> {{ injectedMessage }}</div>
+    <input v-model="injectedMessage" placeholder="메시지 변경" />
   </div>
 </template>
 
